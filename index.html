@@ -5,27 +5,54 @@
   <title>Status Window</title>
   <script src="https://telegram.org/js/telegram-web-app.js"></script>
   <style>
+    /* Базовый фон и выравнивание */
     body {
-      background: #0f172a;
-      color: white;
-      font-family: sans-serif;
-      padding: 16px;
+        background: linear-gradient(135deg, #0f172a, #1e293b);
+        color: white;
+        font-family: sans-serif;
+        padding: 16px;
+        display: flex;
+        justify-content: center;
+        align-items: center;
+        height: 100vh;
+        flex-direction: column;
     }
+
+    /* Карточка с плавным появлением */
     .card {
-      background: #1e293b;
-      padding: 16px;
-      border-radius: 12px;
-      margin-bottom: 12px;
+        background: rgba(30, 41, 59, 0.9);
+        padding: 20px;
+        border-radius: 16px;
+        text-align: center;
+        opacity: 0;
+        transform: scale(0.8);
+        animation: appear 0.6s forwards;
+        margin-bottom: 12px;
+        width: 90%;
+        max-width: 400px;
     }
+
+    @keyframes appear {
+        to { opacity: 1; transform: scale(1); }
+    }
+
+    /* Кнопка */
     button {
-      width: 100%;
-      padding: 12px;
-      border-radius: 8px;
-      border: none;
-      background: #2563eb;
-      color: white;
-      font-size: 16px;
-      cursor: pointer;
+        padding: 14px 24px;
+        border-radius: 10px;
+        border: none;
+        background: #2563eb;
+        color: white;
+        font-size: 16px;
+        cursor: pointer;
+        transition: transform 0.2s, background 0.2s;
+        width: 90%;
+        max-width: 400px;
+    }
+
+    button:hover {
+        transform: scale(1.05);
+        background: #1d4ed8;
     }
   </style>
 </head>
@@ -43,7 +70,7 @@
   tg.expand();
 
   function acceptContract() {
-    // Переход на следующий экран (задача)
+    // Переход на экран контракта и задания с плавным эффектом
     document.body.innerHTML = `
       <div class="card">
         <h3>📜 Контракт принят</h3>
