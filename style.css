@@ -1,10 +1,8 @@
-/* style.css */
-
 /* Импорт шрифта */
 @import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
 
 body {
-    background: #1e1e1e; /* серый основной фон */
+    background: #1e1e1e;
     color: white;
     font-family: 'Press Start 2P', monospace;
     padding: 16px;
@@ -32,8 +30,8 @@ body {
 }
 
 #loadingBarContainer {
-    width: 40%; /* короче полоска */
-    height: 20px; /* толще */
+    width: 40%;
+    height: 20px;
     background: #333;
     border-radius: 10px;
     overflow: hidden;
@@ -43,7 +41,7 @@ body {
 #progressBar {
     width: 0%;
     height: 100%;
-    background: #aaa; /* сероватый цвет заполнения */
+    background: #aaa;
 }
 
 /* Карточка */
@@ -118,4 +116,4 @@ button:hover {
     margin-bottom: 2px;
 }
 
-/* Легко добавлять новые вкладки: просто добавить <div class="navButton"> в #bottomNav */
+/* Можно легко добавлять новые вкладки: просто добавить <div class="navButton"> в #bottomNav */
