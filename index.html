@@ -1,0 +1,64 @@
+<!DOCTYPE html>
+<html>
+<head>
+  <meta charset="UTF-8">
+  <title>Status Window</title>
+  <script src="https://telegram.org/js/telegram-web-app.js"></script>
+  <style>
+    body {
+      background: #0f172a;
+      color: white;
+      font-family: sans-serif;
+      padding: 16px;
+    }
+    .card {
+      background: #1e293b;
+      padding: 16px;
+      border-radius: 12px;
+      margin-bottom: 12px;
+    }
+    button {
+      width: 100%;
+      padding: 12px;
+      border-radius: 8px;
+      border: none;
+      background: #2563eb;
+      color: white;
+      font-size: 16px;
+      cursor: pointer;
+    }
+  </style>
+</head>
+<body>
+
+<div class="card">
+  <h3>🟥 СИСТЕМА АКТИВИРОВАНА</h3>
+  <p>Обнаружено тело без активной прокачки.<br>Физические параметры ниже потенциальных значений.</p>
+</div>
+
+<button onclick="acceptContract()">Принять контракт</button>
+
+<script>
+  const tg = window.Telegram.WebApp;
+  tg.expand();
+
+  function acceptContract() {
+    // Переход на следующий экран (задача)
+    document.body.innerHTML = `
+      <div class="card">
+        <h3>📜 Контракт принят</h3>
+        <p>Класс: Человек<br>
+           Режим: Медленная прокачка<br>
+           Сложность: Реальная жизнь (без читов)
+        </p>
+      </div>
+      <div class="card">
+        <h3>🧠 Ежедневный квест</h3>
+        <p>🎯 Задание: 10 отжиманий</p>
+      </div>
+    `;
+  }
+</script>
+
+</body>
+</html>
