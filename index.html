@@ -58,21 +58,20 @@ function animateLoading(callback) {
     let width = 0;
     let bar = document.getElementById("progressBar");
     let interval = setInterval(() => {
-        width += 2; // медленнее, дольше
+        width += 2;
         bar.style.width = width + "%";
         if (width >= 100) {
             clearInterval(interval);
             document.getElementById("loadingScreen").style.display = "none";
-            document.body.style.background = "#1e1e1e"; // меняем фон после загрузки
+            document.body.style.background = "#1e1e1e"; // фон после загрузки
             callback();
         }
-    }, 50); // медленнее
+    }, 50);
 }
 
 // Инициализация приложения
 animateLoading(() => {
     if (user && user.acceptedContract) {
-        showMainContent();
         document.getElementById("bottomNav").style.display = "flex";
         showTab('tasks');
     } else {
@@ -117,12 +116,16 @@ function declineContract() {
 
 // Переключение вкладок
 function showTab(tab) {
-    document.querySelectorAll('.navButton').forEach(btn => btn.classList.remove('active'));
-    document.getElementById('tab'+tab.charAt(0).toUpperCase() + tab.slice(1)).classList.add('active');
+    let tabElement = document.getElementById('tab'+tab.charAt(0).toUpperCase() + tab.slice(1));
+    if(tabElement) {
+        document.querySelectorAll('.navButton').forEach(btn => btn.classList.remove('active'));
+        tabElement.classList.add('active');
+    }
 
+    let content = '';
     switch(tab) {
         case 'cabinet':
-            document.getElementById('mainContent').innerHTML = `
+            content = `
                 <div class="card">
                     <h3>💻 Личный кабинет</h3>
                     <p>Кодовое имя: ${user.codeName}<br>
@@ -133,7 +136,7 @@ function showTab(tab) {
                 </div>`;
             break;
         case 'tasks':
-            document.getElementById('mainContent').innerHTML = `
+            content = `
                 <div class="card">
                     <h3>🧠 Задания</h3>
                     <p>🎯 10 отжиманий</p>
@@ -141,12 +144,14 @@ function showTab(tab) {
                 </div>`;
             break;
         case 'shop':
-            document.getElementById('mainContent').innerHTML = `<div class="card">Магазин (пока пусто)</div>`;
+            content = `<div class="card">Магазин (пока пусто)</div>`;
             break;
         case 'achievements':
-            document.getElementById('mainContent').innerHTML = `<div class="card">Достижения (пока пусто)</div>`;
+            content = `<div class="card">Достижения (пока пусто)</div>`;
             break;
     }
+    document.getElementById("mainContent").innerHTML = content;
+    document.getElementById("mainContent").style.display = "block";
 }
 
 // Выполнение задания 1 раз в день
