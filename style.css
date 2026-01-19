@@ -1,233 +1,1181 @@
-@import url('https://fonts.googleapis.com/css2?family=Press+Start+2P&display=swap');
+/* =========================================== */
+/* ОСНОВНЫЕ СТИЛИ ПРИЛОЖЕНИЯ IRL LEVEL */
+/* =========================================== */
 
+/* Сброс стандартных отступов и полей */
 * {
+    margin: 0;
+    padding: 0;
     box-sizing: border-box;
+    /* Чтобы padding не увеличивал размер элемента */
 }
 
+/* Настройка HTML и BODY */
+html,
 body {
-    background: #1e1e1e;
-    color: white;
-    font-family: 'Press Start 2P', monospace;
-    padding: 16px;
+    height: 100%;
+    /* Занимаем всю высоту экрана */
+    font-family: 'Roboto Mono', monospace;
+    /* Основной шрифт */
+    background: #0a0a0a;
+    /* Темный фон как в играх */
+    color: #ffffff;
+    /* Белый текст */
+    overflow: hidden;
+    /* Убираем прокрутку */
+}
+
+/* =========================================== */
+/* ЭКРАН ЗАГРУЗКИ */
+/* =========================================== */
+
+#loadingScreen {
+    position: fixed;
+    /* Фиксированное положение поверх всего */
+    top: 0;
+    left: 0;
+    width: 100%;
+    height: 100%;
+    background: linear-gradient(135deg, #0a0a0a 0%, #1a1a2e 100%);
+    /* Градиентный фон */
     display: flex;
+    /* Используем flexbox для центрирования */
     justify-content: center;
     align-items: center;
-    min-height: 100vh;
-    flex-direction: column;
-    margin: 0;
-    padding-bottom: 70px; /* Для нижней панели */
+    z-index: 9999;
+    /* Поверх всего */
+    transition: opacity 0.5s;
+    /* Плавное исчезновение */
 }
 
-/* Экран загрузки */
-#loadingScreen {
+.loading-content {
+    text-align: center;
+    /* Центрируем текст */
+    width: 90%;
+    /* 90% ширины экрана */
+    max-width: 400px;
+    /* Но не больше 400px */
+}
+
+/* Логотип на экране загрузки */
+.loading-logo {
+    margin-bottom: 40px;
+    animation: pulse 2s infinite;
+    /* Пульсация */
+}
+
+.loading-logo i {
+    font-size: 64px;
+    /* Большая иконка */
+    color: #00ff88;
+    /* Неоново-зеленый */
+    margin-bottom: 20px;
+}
+
+.loading-logo h1 {
+    font-family: 'Orbitron', sans-serif;
+    /* Игровой шрифт */
+    font-size: 32px;
+    color: #00ff88;
+    text-shadow: 0 0 10px rgba(0, 255, 136, 0.5);
+    /* Свечение */
+}
+
+/* Контейнер для прогресс-бара */
+.loading-bar-container {
+    background: rgba(255, 255, 255, 0.05);
+    /* Полупрозрачный фон */
+    padding: 25px;
+    border-radius: 15px;
+    border: 1px solid rgba(0, 255, 136, 0.2);
+    /* Зеленая рамка */
+}
+
+/* Сам прогресс-бар */
+.loading-bar {
+    width: 100%;
+    height: 20px;
+    background: rgba(255, 255, 255, 0.1);
+    /* Светлый фон полосы */
+    border-radius: 10px;
+    overflow: hidden;
+    /* Обрезаем содержимое по границам */
+    margin-bottom: 15px;
+}
+
+/* Заполняющая часть прогресс-бара */
+.loading-progress {
+    width: 0%;
+    /* Начинаем с 0% */
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #00ccff);
+    /* Градиент зеленый-голубой */
+    border-radius: 10px;
+    transition: width 0.3s ease;
+    /* Плавное изменение ширины */
+}
+
+/* Текст под прогресс-баром */
+.loading-text {
+    font-size: 14px;
+    color: #888;
+    font-family: 'Roboto Mono', monospace;
+}
+
+/* =========================================== */
+/* ОСНОВНОЙ ИНТЕРФЕЙС ПРИЛОЖЕНИЯ */
+/* =========================================== */
+
+/* Класс для скрытия элементов */
+.hidden {
+    display: none !important;
+    /* !important гарантирует переопределение */
+}
+
+/* Контейнер приложения */
+#app {
+    height: 100vh;
+    /* 100% высоты экрана */
+    display: flex;
+    flex-direction: column;
+    /* Вертикальное расположение */
+}
+
+/* Шапка приложения */
+.app-header {
+    background: rgba(20, 20, 30, 0.9);
+    /* Полупрозрачный темно-синий */
+    backdrop-filter: blur(10px);
+    /* Размытие фона */
+    padding: 15px 20px;
+    display: flex;
+    justify-content: space-between;
+    /* Элементы по краям */
+    align-items: center;
+    border-bottom: 1px solid rgba(0, 255, 136, 0.3);
+    /* Зеленая линия снизу */
+    z-index: 100;
+}
+
+/* Левая часть шапки (имя игрока) */
+.header-left {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+    /* Расстояние между элементами */
+}
+
+.header-icon {
+    color: #00ff88;
+    font-size: 20px;
+}
+
+#playerCodeName {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    color: #00ff88;
+    font-size: 16px;
+}
+
+/* Центральная часть шапки (название) */
+.header-center {
+    flex: 1;
+    /* Занимает все доступное пространство */
+    text-align: center;
+}
+
+.app-title {
+    font-family: 'Orbitron', sans-serif;
+    font-size: 18px;
+    color: #ffffff;
+    letter-spacing: 2px;
+    /* Расстояние между буквами */
+}
+
+/* Правая часть шапки (уровень) */
+.header-right {
+    display: flex;
+    align-items: center;
+}
+
+/* Значок уровня */
+.level-badge {
+    background: linear-gradient(135deg, #ff0080, #ff8c00);
+    /* Розово-оранжевый градиент */
+    color: white;
+    width: 36px;
+    height: 36px;
+    border-radius: 50%;
+    /* Круг */
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: 900;
+    font-size: 18px;
+    box-shadow: 0 0 15px rgba(255, 0, 128, 0.5);
+    /* Свечение */
+}
+
+/* =========================================== */
+/* ОСНОВНОЕ СОДЕРЖИМОЕ */
+/* =========================================== */
+
+main {
+    flex: 1;
+    /* Занимает все оставшееся пространство */
+    overflow-y: auto;
+    /* Вертикальная прокрутка если контента много */
+    padding: 20px;
+    background: linear-gradient(180deg, rgba(10, 10, 10, 1) 0%, rgba(26, 26, 46, 1) 100%);
+}
+
+/* =========================================== */
+/* НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ */
+/* =========================================== */
+
+.bottom-nav {
+    background: rgba(20, 20, 30, 0.95);
+    /* Темный фон */
+    backdrop-filter: blur(10px);
+    /* Размытие */
+    display: flex;
+    padding: 10px 5px;
+    border-top: 1px solid rgba(255, 255, 255, 0.1);
+    z-index: 100;
+}
+
+/* Кнопки навигации */
+.nav-btn {
+    flex: 1;
+    /* Все кнопки одинаковой ширины */
+    background: none;
+    /* Прозрачный фон */
+    border: none;
+    /* Без рамки */
+    color: #888;
+    /* Серый цвет по умолчанию */
+    display: flex;
+    flex-direction: column;
+    /* Иконка над текстом */
+    align-items: center;
+    padding: 10px 5px;
+    font-size: 12px;
+    cursor: pointer;
+    /* Курсор-указатель */
+    transition: all 0.3s ease;
+    /* Плавные анимации */
+    border-radius: 8px;
+}
+
+.nav-btn i {
+    font-size: 20px;
+    margin-bottom: 5px;
+    transition: all 0.3s ease;
+}
+
+/* Активная кнопка */
+.nav-btn.active {
+    color: #00ff88;
+    /* Зеленый цвет */
+    background: rgba(0, 255, 136, 0.1);
+    /* Светло-зеленый фон */
+}
+
+.nav-btn.active i {
+    color: #00ff88;
+    transform: translateY(-3px);
+    /* Поднимаем иконку */
+}
+
+/* Эффект при наведении */
+.nav-btn:hover:not(.active) {
+    color: #fff;
+    background: rgba(255, 255, 255, 0.05);
+}
+
+/* =========================================== */
+/* КАРТОЧКИ (для контента вкладок) */
+/* =========================================== */
+
+.card {
+    background: rgba(30, 30, 46, 0.8);
+    /* Темно-синий фон */
+    border-radius: 15px;
+    padding: 20px;
+    margin-bottom: 15px;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+    /* Тонкая зеленая рамка */
+    box-shadow: 0 5px 15px rgba(0, 0, 0, 0.3);
+    /* Тень */
+}
+
+.card h2 {
+    color: #00ff88;
+    font-family: 'Orbitron', sans-serif;
+    margin-bottom: 15px;
+    font-size: 20px;
+}
+
+.card h3 {
+    color: #fff;
+    margin-bottom: 10px;
+    font-size: 16px;
+}
+
+/* =========================================== */
+/* КНОПКИ */
+/* =========================================== */
+
+.btn-primary {
+    background: linear-gradient(135deg, #00ff88, #00ccff);
+    /* Зелено-голубой градиент */
+    color: #000;
+    /* Черный текст */
+    border: none;
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-primary:hover {
+    transform: translateY(-2px);
+    /* Поднимаем при наведении */
+    box-shadow: 0 5px 20px rgba(0, 255, 136, 0.4);
+    /* Свечение */
+}
+
+.btn-secondary {
+    background: rgba(255, 255, 255, 0.1);
+    /* Светлый полупрозрачный */
+    color: #fff;
+    border: 1px solid rgba(255, 255, 255, 0.3);
+    padding: 15px 25px;
+    border-radius: 10px;
+    font-family: 'Roboto Mono', monospace;
+    font-size: 16px;
+    cursor: pointer;
+    transition: all 0.3s ease;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    width: 100%;
+    margin-top: 10px;
+}
+
+.btn-secondary:hover {
+    background: rgba(255, 255, 255, 0.2);
+    /* Становится светлее */
+}
+
+/* =========================================== */
+/* МОДАЛЬНЫЕ ОКНА (всплывающие окна) */
+/* =========================================== */
+
+.modal {
     position: fixed;
     top: 0;
     left: 0;
     width: 100%;
     height: 100%;
-    background: black;
+    background: rgba(0, 0, 0, 0.8);
+    /* Полупрозрачный черный фон */
     display: flex;
-    align-items: center;
     justify-content: center;
-    flex-direction: column;
-    z-index: 100;
+    align-items: center;
+    z-index: 1000;
+    backdrop-filter: blur(5px);
+    /* Размытие фона */
 }
 
-#loadingBarContainer {
-    width: 80%;
-    height: 20px;
-    background: #333;
-    border-radius: 10px;
+.modal-content {
+    background: linear-gradient(135deg, #1a1a2e 0%, #16213e 100%);
+    border-radius: 20px;
+    width: 90%;
+    max-width: 500px;
+    border: 2px solid #00ff88;
+    box-shadow: 0 0 50px rgba(0, 255, 136, 0.3);
     overflow: hidden;
-    margin-top: 20px;
-    border: 2px solid #444;
 }
 
-#progressBar {
-    width: 0%;
-    height: 100%;
-    background: linear-gradient(90deg, #ff0000, #ff6b6b);
-    transition: width 0.1s;
-}
-
-/* Карточка */
-.card {
-    background: rgba(40, 40, 40, 0.95);
+/* Заголовок модального окна */
+.modal-header {
+    background: rgba(0, 0, 0, 0.3);
     padding: 20px;
-    border-radius: 16px;
     text-align: center;
-    margin-bottom: 15px;
-    width: 100%;
-    max-width: 400px;
-    border: 1px solid #444;
-    box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+    border-bottom: 1px solid rgba(0, 255, 136, 0.3);
 }
 
-/* Кнопка */
-button {
-    padding: 14px 24px;
-    border-radius: 10px;
-    border: none;
-    background: linear-gradient(145deg, #2563eb, #1d4ed8);
-    color: white;
-    font-size: 14px;
-    cursor: pointer;
-    transition: transform 0.2s, box-shadow 0.2s;
-    width: 100%;
-    max-width: 250px;
-    margin: 5px;
-    font-family: 'Press Start 2P', monospace;
+.modal-header h2 {
+    color: #00ff88;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 24px;
+    margin-top: 10px;
 }
 
-button:hover {
-    transform: translateY(-2px);
-    box-shadow: 0 5px 15px rgba(37, 99, 235, 0.4);
+/* Тело модального окна */
+.modal-body {
+    padding: 20px;
 }
 
-button:active {
-    transform: translateY(0);
-}
-
-/* Специальные кнопки */
-.decline-btn {
-    background: linear-gradient(145deg, #444, #333) !important;
-    border: 1px solid #666 !important;
-}
-
-/* Контейнер кнопок */
-.button-container {
+/* Подвал модального окна */
+.modal-footer {
+    padding: 20px;
+    background: rgba(0, 0, 0, 0.2);
     display: flex;
     flex-direction: column;
     gap: 10px;
-    margin-top: 20px;
-    align-items: center;
 }
 
-/* Нижняя панель вкладок */
-#bottomNav {
-    position: fixed;
-    bottom: 0;
-    left: 0;
-    width: 100%;
-    height: 70px;
-    background: rgba(30, 30, 30, 0.95);
-    display: flex;
-    justify-content: space-around;
-    align-items: center;
-    border-top: 2px solid #444;
-    z-index: 200;
-    backdrop-filter: blur(10px);
+/* =========================================== */
+/* АНИМАЦИИ */
+/* =========================================== */
+
+/* Пульсация */
+@keyframes pulse {
+    0% {
+        transform: scale(1);
+    }
+
+    50% {
+        transform: scale(1.05);
+    }
+
+    100% {
+        transform: scale(1);
+    }
 }
 
-.navButton {
-    display: flex;
-    flex-direction: column;
-    align-items: center;
-    color: #888;
-    font-size: 10px;
-    cursor: pointer;
-    transition: all 0.3s;
-    padding: 8px;
-    border-radius: 8px;
-    flex: 1;
-    max-width: 80px;
+/* Появление */
+@keyframes fadeIn {
+    from {
+        opacity: 0;
+    }
+
+    to {
+        opacity: 1;
+    }
 }
 
-.navButton:hover {
-    background: rgba(255, 255, 255, 0.1);
+/* Слайд-ин сверху */
+@keyframes slideInDown {
+    from {
+        transform: translateY(-50px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-.navButton.active {
-    color: gold;
-    transform: translateY(-5px);
+/* Применяем анимацию появления */
+.modal-content {
+    animation: slideInDown 0.3s ease;
 }
 
-.navButton img {
-    width: 24px;
-    height: 24px;
-    margin-bottom: 5px;
-    filter: brightness(0.8);
-}
+/* =========================================== */
+/* АДАПТИВНОСТЬ (для разных размеров экрана) */
+/* =========================================== */
 
-.navButton.active img {
-    filter: brightness(1);
-}
-
-/* Для контракта */
-.contract-card {
-    background: linear-gradient(135deg, #1a1a2e, #16213e);
-    border: 2px solid #ff0000;
-}
-
-.contract-card h3 {
-    color: #ff0000;
-    text-shadow: 0 0 10px rgba(255, 0, 0, 0.5);
-}
-
-.terms {
-    text-align: left;
-    margin: 20px 0;
-    padding: 10px;
-    background: rgba(0, 0, 0, 0.3);
-    border-radius: 8px;
-}
-
-.terms p {
-    margin: 10px 0;
-    font-size: 12px;
-}
-
-/* Таймер */
-.timer {
-    background: rgba(0, 0, 0, 0.5);
-    padding: 10px;
-    border-radius: 8px;
-    margin: 10px 0;
-    font-size: 12px;
-    border: 1px solid #444;
-}
-
-/* Адаптивность для телефонов */
+/* Для маленьких экранов (телефоны) */
 @media (max-width: 480px) {
+    .app-header {
+        padding: 12px 15px;
+    }
+
+    #playerCodeName {
+        font-size: 14px;
+    }
+
+    .app-title {
+        font-size: 16px;
+    }
+
+    .level-badge {
+        width: 32px;
+        height: 32px;
+        font-size: 16px;
+    }
+
+    main {
+        padding: 15px;
+    }
+
     .card {
         padding: 15px;
     }
-    
-    button {
-        padding: 12px 20px;
-        font-size: 12px;
+
+    .nav-btn {
+        font-size: 10px;
+        padding: 8px 3px;
     }
-    
-    #bottomNav {
-        height: 65px;
+
+    .nav-btn i {
+        font-size: 18px;
     }
-    
-    .navButton {
-        font-size: 9px;
+}
+
+/* Для средних экранов (планшеты) */
+@media (min-width: 768px) {
+    .modal-content {
+        max-width: 600px;
     }
-    
-    .navButton img {
-        width: 20px;
-        height: 20px;
+
+    .bottom-nav {
+        max-width: 768px;
+        margin: 0 auto;
     }
+}
+
+
+/* =========================================== */
+/* ДОПОЛНИТЕЛЬНЫЕ СТИЛИ ДЛЯ app.js */
+/* =========================================== */
+
+/* Информация игрока в кабинете */
+.player-info {
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+    padding: 15px;
+    margin-bottom: 20px;
+}
+
+.player-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+.player-avatar {
+    width: 60px;
+    height: 60px;
+    background: linear-gradient(135deg, #00ff88, #00ccff);
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 24px;
+    color: #000;
+    margin-right: 15px;
+}
+
+.player-name h3 {
+    color: #00ff88;
+    font-size: 18px;
+    margin-bottom: 5px;
+}
+
+.player-title {
+    color: #aaa;
+    font-size: 12px;
+}
+
+/* Статистика игрока */
+.player-stats {
+    display: grid;
+    grid-template-columns: repeat(2, 1fr);
+    gap: 10px;
+}
+
+.stat-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 10px;
+    border-radius: 8px;
+    text-align: center;
+}
+
+.stat-label {
+    font-size: 11px;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.stat-value {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+}
+
+.stat-value.level {
+    color: #ff0080;
+}
+
+.stat-value.xp {
+    color: #00ccff;
+}
+
+.stat-value.resolve {
+    color: #00ff88;
+}
+
+.stat-value.diamonds {
+    color: #9b59b6;
+}
+
+/* Прогресс-бар */
+.progress-container {
+    background: rgba(0, 0, 0, 0.2);
+    padding: 15px;
+    border-radius: 10px;
+    margin-bottom: 20px;
+}
+
+.progress-label {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 8px;
+}
+
+.progress-bar {
+    height: 10px;
+    background: rgba(255, 255, 255, 0.1);
+    border-radius: 5px;
+    overflow: hidden;
+}
+
+.progress-fill {
+    height: 100%;
+    background: linear-gradient(90deg, #00ff88, #00ccff);
+    border-radius: 5px;
+    transition: width 0.5s ease;
+}
+
+.progress-text {
+    text-align: right;
+    font-size: 12px;
+    color: #aaa;
+    margin-top: 5px;
+}
+
+/* Характеристики */
+.characteristics {
+    margin-top: 20px;
+}
+
+.characteristics-grid {
+    display: grid;
+    grid-template-columns: repeat(3, 1fr);
+    gap: 10px;
+    margin-top: 15px;
+}
+
+.char-item {
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    text-align: center;
+}
+
+.char-icon {
+    width: 40px;
+    height: 40px;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin: 0 auto 10px;
+    font-size: 18px;
+}
+
+.char-icon.strength {
+    background: rgba(255, 0, 128, 0.2);
+    color: #ff0080;
+}
+
+.char-icon.focus {
+    background: rgba(0, 204, 255, 0.2);
+    color: #00ccff;
+}
+
+.char-icon.will {
+    background: rgba(255, 140, 0, 0.2);
+    color: #ff8c00;
+}
+
+.char-name {
+    font-size: 12px;
+    color: #aaa;
+    margin-bottom: 5px;
+}
+
+.char-value {
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    font-size: 16px;
+    color: #fff;
+}
+
+/* Задания */
+.quest-status {
+    text-align: center;
+    margin: 10px 0 20px;
+    color: #00ff88;
+    font-weight: bold;
+}
+
+.quests-list {
+    display: flex;
+    flex-direction: column;
+    gap: 15px;
+}
+
+.quest-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(0, 255, 136, 0.1);
+}
+
+.quest-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.quest-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(0, 255, 136, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #00ff88;
+    font-size: 18px;
+}
+
+.quest-info h3 {
+    color: #fff;
+    font-size: 16px;
+    margin-bottom: 5px;
+}
+
+.quest-desc {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.quest-rewards {
+    display: flex;
+    gap: 10px;
+    margin-bottom: 15px;
+    flex-wrap: wrap;
+}
+
+.reward {
+    background: rgba(0, 0, 0, 0.3);
+    padding: 5px 10px;
+    border-radius: 20px;
+    font-size: 12px;
+    color: #aaa;
+}
+
+.reward i {
+    margin-right: 5px;
+}
+
+.quest-button {
+    background: linear-gradient(135deg, #00ff88, #00ccff);
+    color: #000;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    font-family: 'Orbitron', sans-serif;
+    font-weight: bold;
+    width: 100%;
+    cursor: pointer;
+    transition: all 0.3s ease;
+}
+
+.quest-button:disabled {
+    background: #444;
+    color: #888;
+    cursor: not-allowed;
+}
+
+.quest-button:hover:not(:disabled) {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(0, 255, 136, 0.3);
+}
+
+.quest-timer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 15px;
+    background: rgba(0, 0, 0, 0.3);
+    border-radius: 10px;
+    color: #00ccff;
+    font-family: 'Orbitron', sans-serif;
+}
+
+/* Магазин */
+.shop-balance {
+    background: rgba(155, 89, 182, 0.1);
+    border: 1px solid rgba(155, 89, 182, 0.3);
+    border-radius: 10px;
+    padding: 15px;
+    text-align: center;
+    margin-bottom: 20px;
+    font-size: 18px;
+}
+
+.shop-items {
+    display: grid;
+    grid-template-columns: repeat(auto-fill, minmax(200px, 1fr));
+    gap: 15px;
+}
+
+.shop-item {
+    background: rgba(255, 255, 255, 0.05);
+    border-radius: 10px;
+    padding: 15px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.item-header {
+    display: flex;
+    align-items: center;
+    margin-bottom: 10px;
+}
+
+.item-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 10px;
+    color: #ffc107;
+    font-size: 18px;
+}
+
+.item-header h3 {
+    flex: 1;
+    font-size: 16px;
+    color: #fff;
+}
+
+.item-price {
+    color: #9b59b6;
+    font-weight: bold;
+}
+
+.item-desc {
+    color: #aaa;
+    font-size: 12px;
+    margin-bottom: 15px;
+    min-height: 40px;
+}
+
+.buy-button {
+    background: linear-gradient(135deg, #9b59b6, #8e44ad);
+    color: white;
+    border: none;
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    cursor: pointer;
+    font-weight: bold;
+    transition: all 0.3s ease;
+}
+
+.buy-button:hover {
+    transform: translateY(-2px);
+    box-shadow: 0 5px 15px rgba(155, 89, 182, 0.3);
+}
+
+/* Достижения */
+.achievements-count {
+    text-align: center;
+    color: #aaa;
+    margin-bottom: 20px;
+}
+
+.achievements-list {
+    display: flex;
+    flex-direction: column;
+    gap: 10px;
+}
+
+.achievement-item {
+    display: flex;
+    align-items: center;
+    background: rgba(255, 255, 255, 0.05);
+    padding: 15px;
+    border-radius: 10px;
+    border: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.achievement-item.unlocked {
+    border-color: rgba(0, 255, 136, 0.3);
+    background: rgba(0, 255, 136, 0.05);
+}
+
+.achievement-icon {
+    width: 40px;
+    height: 40px;
+    background: rgba(255, 193, 7, 0.1);
+    border-radius: 10px;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    margin-right: 15px;
+    color: #ffc107;
+    font-size: 18px;
+}
+
+.achievement-item.unlocked .achievement-icon {
+    background: rgba(0, 255, 136, 0.2);
+    color: #00ff88;
+}
+
+.achievement-info {
+    flex: 1;
+}
+
+.achievement-info h3 {
+    color: #fff;
+    font-size: 14px;
+    margin-bottom: 5px;
+}
+
+.achievement-info p {
+    color: #aaa;
+    font-size: 12px;
+}
+
+.achievement-item.unlocked .achievement-info h3 {
+    color: #00ff88;
+}
+
+.achievement-status {
+    font-size: 20px;
+}
+
+/* Настройки */
+.settings-section {
+    margin-bottom: 25px;
+    padding-bottom: 20px;
+    border-bottom: 1px solid rgba(255, 255, 255, 0.1);
+}
+
+.settings-section:last-child {
+    border-bottom: none;
+}
+
+.settings-section h3 {
+    color: #00ccff;
+    margin-bottom: 15px;
+    font-size: 16px;
+}
+
+.setting-item {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 15px;
+}
+
+/* Переключатель (toggle switch) */
+.switch {
+    position: relative;
+    display: inline-block;
+    width: 50px;
+    height: 24px;
+}
+
+.switch input {
+    opacity: 0;
+    width: 0;
+    height: 0;
+}
+
+.slider {
+    position: absolute;
+    cursor: pointer;
+    top: 0;
+    left: 0;
+    right: 0;
+    bottom: 0;
+    background-color: #444;
+    transition: .4s;
+    border-radius: 24px;
+}
+
+.slider:before {
+    position: absolute;
+    content: "";
+    height: 16px;
+    width: 16px;
+    left: 4px;
+    bottom: 4px;
+    background-color: white;
+    transition: .4s;
+    border-radius: 50%;
+}
+
+input:checked+.slider {
+    background-color: #00ff88;
+}
+
+input:checked+.slider:before {
+    transform: translateX(26px);
+}
+
+.settings-button {
+    background: rgba(255, 255, 255, 0.05);
+    color: white;
+    border: 1px solid rgba(255, 255, 255, 0.2);
+    padding: 12px;
+    border-radius: 8px;
+    width: 100%;
+    margin-bottom: 10px;
+    cursor: pointer;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    gap: 10px;
+    transition: all 0.3s ease;
+}
+
+.settings-button:hover {
+    background: rgba(255, 255, 255, 0.1);
+}
+
+.settings-button.danger {
+    background: rgba(231, 76, 60, 0.1);
+    border-color: rgba(231, 76, 60, 0.3);
+    color: #e74c3c;
+}
+
+.settings-button.danger:hover {
+    background: rgba(231, 76, 60, 0.2);
+}
+
+.settings-info {
+    text-align: center;
+    margin-top: 20px;
+    color: #aaa;
+    font-size: 12px;
+}
+
+.settings-info p {
+    margin: 5px 0;
+}
+
+/* Уведомления */
+.notification {
+    position: fixed;
+    top: 20px;
+    left: 50%;
+    transform: translateX(-50%) translateY(-100px);
+    background: rgba(20, 20, 30, 0.95);
+    backdrop-filter: blur(10px);
+    border-radius: 10px;
+    padding: 15px 20px;
+    min-width: 300px;
+    max-width: 90%;
+    border-left: 4px solid #00ccff;
+    z-index: 10000;
+    opacity: 0;
+    transition: all 0.3s ease;
+}
+
+.notification.show {
+    transform: translateX(-50%) translateY(0);
+    opacity: 1;
+}
+
+.notification.success {
+    border-left-color: #00ff88;
+}
+
+.notification.error {
+    border-left-color: #ff3860;
+}
+
+.notification.warning {
+    border-left-color: #ffdd57;
+}
+
+.notification-content {
+    display: flex;
+    align-items: center;
+    gap: 10px;
+}
+
+.notification-content i {
+    font-size: 20px;
+}
+
+.notification.success .notification-content i {
+    color: #00ff88;
+}
+
+.notification.error .notification-content i {
+    color: #ff3860;
+}
+
+.notification.warning .notification-content i {
+    color: #ffdd57;
 }
 
 /* Анимации */
-@keyframes fadeIn {
-    from { opacity: 0; transform: translateY(10px); }
-    to { opacity: 1; transform: translateY(0); }
+@keyframes slideInDown {
+    from {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
+
+    to {
+        transform: translateY(0);
+        opacity: 1;
+    }
 }
 
-.card {
-    animation: fadeIn 0.5s ease-out;
+@keyframes slideOutUp {
+    from {
+        transform: translateY(0);
+        opacity: 1;
+    }
+
+    to {
+        transform: translateY(-100px);
+        opacity: 0;
+    }
 }
 
-@keyframes pulse {
-    0% { transform: scale(1); }
-    50% { transform: scale(1.05); }
-    100% { transform: scale(1); }
-}
+/* Адаптивность */
+@media (max-width: 480px) {
+    .player-stats {
+        grid-template-columns: 1fr;
+    }
 
-.pulse {
-    animation: pulse 2s infinite;
+    .characteristics-grid {
+        grid-template-columns: 1fr;
+    }
+
+    .shop-items {
+        grid-template-columns: 1fr;
+    }
+
+    .notification {
+        min-width: 90%;
+    }
 }
