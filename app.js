@@ -1,5 +1,5 @@
 // ===========================================
-// IRL LEVEL - РАБОЧИЙ КОД
+// IRL LEVEL - РАБОЧИЙ КОД С ИСПРАВЛЕНИЯМИ
 // ===========================================
 
 const SUPABASE_URL = 'https://rghcofervucgrkudsuvq.supabase.co';
@@ -22,6 +22,7 @@ const closeLevelUpBtn = document.getElementById('closeLevelUpBtn');
 let supabaseClient = null;
 let telegramUser = null;
 let player = null;
+let currentTab = 'cabinet'; // Добавляем переменную для отслеживания текущей вкладки
 
 // ===========================================
 // БАЗОВЫЕ ФУНКЦИИ
@@ -285,7 +286,7 @@ function startGame() {
 }
 
 // ===========================================
-// ВКЛАДКИ
+// ВКЛАДКИ С ИСПРАВЛЕННОЙ ЛОГИКОЙ КНОПОК
 // ===========================================
 
 function getCabinetContent() {
@@ -330,25 +331,42 @@ function getQuestsContent() {
     if (!player) return '<div class="card"><h2>Ошибка</h2></div>';
     const today = new Date().toISOString().split('T')[0];
     const canDoQuest = player.lastQuestDate !== today;
+    const isQuestDone = !canDoQuest;
+
+    // Получаем ID выполненных сегодня заданий
+    const completedQuestsToday = player.completedQuestsToday || [];
+
     return `
         <div class="card">
             <h2><i class="fas fa-tasks"></i> ЕЖЕДНЕВНЫЕ ЗАДАНИЯ</h2>
             <p class="quest-status">${canDoQuest ? '✅ Задания доступны!' : '⏳ Уже выполнено сегодня'}</p>
             <div class="quests-list">
-                <div class="quest-item">
+                <div class="quest-item" id="quest-strength">
                     <div class="quest-header"><div class="quest-icon"><i class="fas fa-dumbbell"></i></div><div class="quest-info"><h3>10 отжиманий</h3><p class="quest-desc">Развивайте физическую силу</p></div></div>
                     <div class="quest-rewards"><span class="reward"><i class="fas fa-star"></i> +10 XP</span><span class="reward"><i class="fas fa-bolt"></i> +3 Resolve</span><span class="reward"><i class="fas fa-dumbbell"></i> +0.1 к Силе</span></div>
-                    <button class="quest-button" onclick="completeQuest('strength')" ${!canDoQuest ? 'disabled' : ''}>${canDoQuest ? 'ВЫПОЛНИТЬ' : 'ВЫПОЛНЕНО'}</button>
+                    <button class="quest-button" onclick="completeQuest('strength', this)" 
+                        ${isQuestDone ? 'disabled' : ''}
+                        ${completedQuestsToday.includes('strength') ? 'disabled style="background: #444; color: #888;"' : ''}>
+                        ${completedQuestsToday.includes('strength') ? 'ВЫПОЛНЕНО' : isQuestDone ? 'ВЫПОЛНЕНО' : 'ВЫПОЛНИТЬ'}
+                    </button>
                 </div>
-                <div class="quest-item">
+                <div class="quest-item" id="quest-focus">
                     <div class="quest-header"><div class="quest-icon"><i class="fas fa-book"></i></div><div class="quest-info"><h3>Читать 30 минут</h3><p class="quest-desc">Развивайте концентрацию</p></div></div>
                     <div class="quest-rewards"><span class="reward"><i class="fas fa-star"></i> +15 XP</span><span class="reward"><i class="fas fa-bolt"></i> +5 Resolve</span><span class="reward"><i class="fas fa-brain"></i> +0.1 к Концентрации</span></div>
-                    <button class="quest-button" onclick="completeQuest('focus')" ${!canDoQuest ? 'disabled' : ''}>${canDoQuest ? 'ВЫПОЛНИТЬ' : 'ВЫПОЛНЕНО'}</button>
+                    <button class="quest-button" onclick="completeQuest('focus', this)" 
+                        ${isQuestDone ? 'disabled' : ''}
+                        ${completedQuestsToday.includes('focus') ? 'disabled style="background: #444; color: #888;"' : ''}>
+                        ${completedQuestsToday.includes('focus') ? 'ВЫПОЛНЕНО' : isQuestDone ? 'ВЫПОЛНЕНО' : 'ВЫПОЛНИТЬ'}
+                    </button>
                 </div>
-                <div class="quest-item">
+                <div class="quest-item" id="quest-will">
                     <div class="quest-header"><div class="quest-icon"><i class="fas fa-sun"></i></div><div class="quest-info"><h3>Ранний подъем (до 7:00)</h3><p class="quest-desc">Развивайте силу воли</p></div></div>
                     <div class="quest-rewards"><span class="reward"><i class="fas fa-star"></i> +20 XP</span><span class="reward"><i class="fas fa-bolt"></i> +7 Resolve</span><span class="reward"><i class="fas fa-fire"></i> +0.1 к Воле</span></div>
-                    <button class="quest-button" onclick="completeQuest('will')" ${!canDoQuest ? 'disabled' : ''}>${canDoQuest ? 'ВЫПОЛНИТЬ' : 'ВЫПОЛНЕНО'}</button>
+                    <button class="quest-button" onclick="completeQuest('will', this)" 
+                        ${isQuestDone ? 'disabled' : ''}
+                        ${completedQuestsToday.includes('will') ? 'disabled style="background: #444; color: #888;"' : ''}>
+                        ${completedQuestsToday.includes('will') ? 'ВЫПОЛНЕНО' : isQuestDone ? 'ВЫПОЛНЕНО' : 'ВЫПОЛНИТЬ'}
+                    </button>
                 </div>
             </div>
         </div>
@@ -410,7 +428,7 @@ function getSettingsContent() {
 }
 
 // ===========================================
-// ЛОГИКА
+// ЛОГИКА С ИСПРАВЛЕНИЯМИ
 // ===========================================
 
 function setActiveNavButton(buttonId) {
@@ -422,6 +440,8 @@ function setActiveNavButton(buttonId) {
 
 function showTab(tabName) {
     if (!mainContent || !player) return;
+
+    currentTab = tabName; // Сохраняем текущую вкладку
 
     let content = '';
     switch (tabName) {
@@ -435,17 +455,38 @@ function showTab(tabName) {
     mainContent.innerHTML = content;
 }
 
-async function completeQuest(type) {
+async function completeQuest(type, buttonElement) {
     if (!player) return;
 
     const today = new Date().toISOString().split('T')[0];
-    if (player.lastQuestDate === today) {
-        showNotification('Уже выполнено сегодня!', 'warning');
+
+    // Инициализируем массив выполненных заданий за сегодня, если его нет
+    if (!player.completedQuestsToday) {
+        player.completedQuestsToday = [];
+    }
+
+    // Проверяем, выполнено ли уже это задание сегодня
+    if (player.completedQuestsToday.includes(type)) {
+        showNotification('Это задание уже выполнено сегодня!', 'warning');
         return;
     }
 
+    // Проверяем, выполнено ли какое-либо задание сегодня
+    const isAnyQuestDoneToday = player.lastQuestDate === today;
+
+    // Если какое-то задание уже выполнено сегодня, но это другое задание
+    if (isAnyQuestDoneToday && player.lastQuestDate === today && !player.completedQuestsToday.includes(type)) {
+        // Позволяем выполнять разные задания в один день
+        // Просто продолжаем
+    }
+
+    // Добавляем текущее задание в список выполненных
+    player.completedQuestsToday.push(type);
+
+    // Обновляем дату последнего задания
     player.lastQuestDate = today;
 
+    // Начисляем награды в зависимости от типа задания
     if (type === 'strength') {
         player.xp += 10;
         player.resolve += 3;
@@ -460,12 +501,30 @@ async function completeQuest(type) {
         player.stats.will = (player.stats.will || 1) + 0.1;
     }
 
+    // Добавляем достижение "первое задание", если его еще нет
     if (!player.achievements.includes('first_quest')) {
         player.achievements.push('first_quest');
     }
 
     await savePlayerData();
 
+    // Визуальное обновление кнопки сразу
+    if (buttonElement) {
+        buttonElement.disabled = true;
+        buttonElement.textContent = 'ВЫПОЛНЕНО';
+        buttonElement.style.background = '#444';
+        buttonElement.style.color = '#888';
+
+        // Анимация смены цвета
+        const questItem = buttonElement.closest('.quest-item');
+        if (questItem) {
+            questItem.style.transition = 'all 0.5s ease';
+            questItem.style.borderColor = 'rgba(0, 255, 136, 0.3)';
+            questItem.style.background = 'rgba(0, 255, 136, 0.05)';
+        }
+    }
+
+    // Проверяем повышение уровня
     if (player.xp >= 100) {
         player.level += 1;
         player.xp = player.xp - 100;
@@ -475,23 +534,34 @@ async function completeQuest(type) {
     }
 
     updatePlayerInfo();
-    showNotification('Задание выполнено!', 'success');
+    showNotification('Задание выполнено! +' + (type === 'strength' ? '10' : type === 'focus' ? '15' : '20') + ' XP', 'success');
+
+    // Обновляем информацию в кабинете, если он открыт
+    if (currentTab === 'cabinet') {
+        showTab('cabinet');
+    }
 }
 
 function buyItem(itemId, price) {
     if (!player) return;
 
     if (player.diamonds < price) {
-        showNotification('Недостаточно!', 'error');
+        showNotification('Недостаточно бриллиантов!', 'error');
         return;
     }
 
     player.diamonds -= price;
 
     switch (itemId) {
-        case 'xp_booster': showNotification('Бустер активирован!', 'success'); break;
-        case 'extra_quest': showNotification('Задание разблокировано!', 'success'); break;
-        case 'neon_skin': showNotification('Скин применен!', 'success'); break;
+        case 'xp_booster':
+            showNotification('Бустер опыта активирован на 24 часа!', 'success');
+            break;
+        case 'extra_quest':
+            showNotification('Дополнительное задание разблокировано!', 'success');
+            break;
+        case 'neon_skin':
+            showNotification('Скин "Неон" применен!', 'success');
+            break;
         case 'reset_stats':
             showNotification('Характеристики сброшены!', 'success');
             player.stats = { strength: 1, focus: 1, will: 1 };
@@ -639,4 +709,6 @@ window.debugSystem = () => {
     console.log('Player:', player);
     console.log('Telegram:', telegramUser);
     console.log('Supabase:', supabaseClient ? '✅' : '❌');
+    console.log('Current Tab:', currentTab);
+    console.log('Completed Quests Today:', player?.completedQuestsToday || []);
 };
