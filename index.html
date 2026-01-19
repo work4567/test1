@@ -1,43 +1,226 @@
 <!DOCTYPE html>
-<html>
+<!-- 
+  Главный файл HTML - структура веб-приложения
+  Содержит все элементы интерфейса
+-->
+<html lang="ru">
+
 <head>
-  <meta charset="UTF-8">
-  <title>IRL Level - Геймификация жизни</title>
-  <script src="https://telegram.org/js/telegram-web-app.js"></script>
-  <link rel="stylesheet" href="style.css">
-  <script src="app.js"></script>
+    <!-- В <head> твоего index.html ДОБАВЬ эту строку: -->
+    <script src="https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2"></script>
+    <!-- Настройки страницы -->
+    <meta charset="UTF-8"> <!-- Поддержка русского языка -->
+    <meta name="viewport" content="width=device-width, initial-scale=1.0"> <!-- Адаптивность для телефонов -->
+    <title>IRL Level - Геймификация жизни</title> <!-- Заголовок вкладки браузера -->
+
+    <!-- Подключаем стили -->
+    <link rel="stylesheet" href="style.css"> <!-- Наш файл со стилями -->
+
+    <!-- Подключаем шрифты из Google -->
+    <link rel="preconnect" href="https://fonts.googleapis.com">
+    <link
+        href="https://fonts.googleapis.com/css2?family=Orbitron:wght@400;700;900&family=Roboto+Mono:wght@300;400;700&display=swap"
+        rel="stylesheet">
+
+    <!-- Подключаем иконки Font Awesome -->
+    <link rel="stylesheet" href="https://cdnjs.cloudflare.com/ajax/libs/font-awesome/6.4.0/css/all.min.css">
+
+    <!-- Подключаем Telegram Web App SDK -->
+    <script src="https://telegram.org/js/telegram-web-app.js"></script>
 </head>
+
 <body>
+    <!-- =========================================== -->
+    <!-- ЭКРАН ЗАГРУЗКИ (показывается первым) -->
+    <!-- =========================================== -->
+    <div id="loadingScreen">
+        <div class="loading-content">
+            <!-- Логотип и заголовок -->
+            <div class="loading-logo">
+                <i class="fas fa-gamepad"></i> <!-- Иконка геймпада -->
+                <h1>IRL LEVEL</h1>
+            </div>
 
-<!-- Экран загрузки -->
-<div id="loadingScreen">
-  <div id="loadingBarContainer">
-    <div id="progressBar"></div>
-  </div>
-</div>
+            <!-- Прогресс-бар загрузки -->
+            <div class="loading-bar-container">
+                <div class="loading-bar">
+                    <!-- Зеленая полоса, которая растет при загрузке -->
+                    <div class="loading-progress" id="loadingProgress"></div>
+                </div>
+                <!-- Текст статуса загрузки -->
+                <div class="loading-text" id="loadingText">Инициализация системы...</div>
+            </div>
+        </div>
+    </div>
 
-<!-- Основной контент -->
-<div id="mainContent" style="display:none;"></div>
+    <!-- =========================================== -->
+    <!-- ОСНОВНОЙ ИНТЕРФЕЙС ПРИЛОЖЕНИЯ -->
+    <!-- =========================================== -->
+    <div id="app" class="hidden">
+        <!-- Шапка приложения -->
+        <header class="app-header">
+            <div class="header-left">
+                <i class="fas fa-user-secret header-icon"></i>
+                <span id="playerCodeName">- - -</span>
+            </div>
+            <div class="header-center">
+                <span class="app-title">IRL LEVEL</span>
+            </div>
+            <div class="header-right">
+                <div class="level-badge" id="playerLevel">1</div>
+            </div>
+        </header>
 
-<!-- Нижняя панель -->
-<div id="bottomNav" style="display:none;">
-    <div class="navButton" id="tabCabinet" onclick="showTab('cabinet')">
-        <img src="https://cdn-icons-png.flaticon.com/512/1077/1077114.png" alt="Кабинет">
-        Кабинет
-    </div>
-    <div class="navButton" id="tabTasks" onclick="showTab('tasks')">
-        <img src="https://cdn-icons-png.flaticon.com/512/4116/4116193.png" alt="Задания">
-        Задания
-    </div>
-    <div class="navButton" id="tabShop" onclick="showTab('shop')">
-        <img src="https://cdn-icons-png.flaticon.com/512/1170/1170679.png" alt="Магазин">
-        Магазин
-    </div>
-    <div class="navButton" id="tabAchievements" onclick="showTab('achievements')">
-        <img src="https://cdn-icons-png.flaticon.com/512/3135/3135715.png" alt="Достижения">
-        Достижения
-    </div>
-</div>
+        <!-- Основное содержимое (меняется при переключении вкладок) -->
+        <main id="mainContent">
+            <!-- Сюда будет вставляться содержимое вкладок -->
+            <!-- Например: кабинет, задания, магазин и т.д. -->
+        </main>
 
+        <!-- =========================================== -->
+        <!-- НИЖНЯЯ ПАНЕЛЬ НАВИГАЦИИ (как в мобильных приложениях) -->
+        <!-- =========================================== -->
+        <nav class="bottom-nav">
+            <!-- Кнопка "Кабинет" -->
+            <button class="nav-btn active" data-tab="cabinet" id="tabCabinet">
+                <i class="fas fa-home"></i>
+                <span>Кабинет</span>
+            </button>
+
+            <!-- Кнопка "Задания" -->
+            <button class="nav-btn" data-tab="quests" id="tabQuests">
+                <i class="fas fa-tasks"></i>
+                <span>Задания</span>
+            </button>
+
+            <!-- Кнопка "Магазин" -->
+            <button class="nav-btn" data-tab="shop" id="tabShop">
+                <i class="fas fa-store"></i>
+                <span>Магазин</span>
+            </button>
+
+            <!-- Кнопка "Достижения" -->
+            <button class="nav-btn" data-tab="achievements" id="tabAchievements">
+                <i class="fas fa-trophy"></i>
+                <span>Достижения</span>
+            </button>
+
+            <!-- Кнопка "Настройки" -->
+            <button class="nav-btn" data-tab="settings" id="tabSettings">
+                <i class="fas fa-cog"></i>
+                <span>Настройки</span>
+            </button>
+        </nav>
+    </div>
+
+    <!-- =========================================== -->
+    <!-- СИСТЕМНЫЕ УВЕДОМЛЕНИЯ (всплывающие сообщения) -->
+    <!-- =========================================== -->
+    <div id="notificationContainer"></div>
+
+    <!-- =========================================== -->
+    <!-- МОДАЛЬНЫЕ ОКНА (всплывающие окна) -->
+    <!-- =========================================== -->
+
+    <!-- Модальное окно контракта (показывается при первом запуске) -->
+    <div id="contractModal" class="modal hidden">
+        <div class="modal-content contract-modal">
+            <div class="modal-header">
+                <i class="fas fa-file-contract contract-icon"></i>
+                <h2>АКТИВАЦИЯ СИСТЕМЫ</h2>
+            </div>
+
+            <div class="modal-body">
+                <div class="contract-info">
+                    <p class="contract-warning">
+                        <i class="fas fa-exclamation-triangle"></i>
+                        Обнаружено тело без активной прокачки
+                    </p>
+
+                    <div class="stats-grid">
+                        <div class="stat-item">
+                            <div class="stat-label">Физические параметры</div>
+                            <div class="stat-value low">24%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Психическая устойчивость</div>
+                            <div class="stat-value low">31%</div>
+                        </div>
+                        <div class="stat-item">
+                            <div class="stat-label">Воля к развитию</div>
+                            <div class="stat-value low">18%</div>
+                        </div>
+                    </div>
+
+                    <div class="contract-terms">
+                        <h3><i class="fas fa-list-check"></i> Условия контракта:</h3>
+                        <ul>
+                            <li><i class="fas fa-check"></i> Ежедневные задания на прокачку</li>
+                            <li><i class="fas fa-check"></i> Уровневая система с наградами</li>
+                            <li><i class="fas fa-check"></i> Прокачка характеристик</li>
+                            <li><i class="fas fa-check"></i> Скрытые достижения</li>
+                            <li><i class="fas fa-check"></i> Магазин улучшений</li>
+                        </ul>
+                    </div>
+                </div>
+            </div>
+
+            <div class="modal-footer">
+                <!-- Кнопка принятия контракта -->
+                <button id="acceptContractBtn" class="btn-primary">
+                    <i class="fas fa-signature"></i> ПРИНЯТЬ КОНТРАКТ
+                </button>
+
+                <!-- Кнопка отказа от контракта -->
+                <button id="declineContractBtn" class="btn-secondary">
+                    <i class="fas fa-times"></i> ОТКЛОНИТЬ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно прокачки уровня -->
+    <div id="levelUpModal" class="modal hidden">
+        <div class="modal-content levelup-modal">
+            <div class="levelup-header">
+                <i class="fas fa-star levelup-icon"></i>
+                <h2>НОВЫЙ УРОВЕНЬ!</h2>
+            </div>
+            <div class="levelup-body">
+                <div class="levelup-info">
+                    <div class="old-level">Уровень <span id="oldLevel">1</span></div>
+                    <div class="level-arrow"><i class="fas fa-arrow-right"></i></div>
+                    <div class="new-level">Уровень <span id="newLevel">2</span></div>
+                </div>
+                <div class="levelup-rewards">
+                    <h3><i class="fas fa-gift"></i> Награды:</h3>
+                    <div class="rewards-list">
+                        <div class="reward-item">
+                            <i class="fas fa-gem"></i>
+                            <span>+5 бриллиантов</span>
+                        </div>
+                        <div class="reward-item">
+                            <i class="fas fa-bolt"></i>
+                            <span>+10 Resolve</span>
+                        </div>
+                        <div class="reward-item">
+                            <i class="fas fa-plus"></i>
+                            <span>+1 к характеристике</span>
+                        </div>
+                    </div>
+                </div>
+            </div>
+            <div class="levelup-footer">
+                <button id="closeLevelUpBtn" class="btn-primary">
+                    <i class="fas fa-check"></i> ПРОДОЛЖИТЬ
+                </button>
+            </div>
+        </div>
+    </div>
+
+    <!-- Подключаем наш JavaScript файл -->
+    <!-- defer означает, что скрипт загрузится после HTML -->
+    <script src="app.js" defer></script>
 </body>
+
 </html>
