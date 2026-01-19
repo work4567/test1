@@ -6,9 +6,9 @@
 // 1. НАСТРОЙКА ПЕРЕМЕННЫХ И КОНСТАНТ
 // ===========================================
 
-// ⚠️ ВСТАВЬ СВОИ ДАННЫЕ SUPABASE СЮДА!
-const SUPABASE_URL = 'https://rghcofervucgrkudsuvq.supabase.co'; // Project URL
-const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnaGNvZmVydnVjZ3JrdWRzdXZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4Mjk4MzgsImV4cCI6MjA4NDQwNTgzOH0.zUovZ4pUwRry_evfOQehl4PYYcM2I7LxSFVNzAVBITY'; // anon public key
+// ВСТАВЬ СВОИ ДАННЫЕ SUPABASE СЮДА!
+const SUPABASE_URL = 'https://rghcofervucgrkudsuvq.supabase.co';
+const SUPABASE_KEY = 'eyJhbGciOiJIUzI1NiIsInR5cCI6IkpXVCJ9.eyJpc3MiOiJzdXBhYmFzZSIsInJlZiI6InJnaGNvZmVydnVjZ3JrdWRzdXZxIiwicm9sZSI6ImFub24iLCJpYXQiOjE3Njg4Mjk4MzgsImV4cCI6MjA4NDQwNTgzOH0.zUovZ4pUwRry_evfOQehl4PYYcM2I7LxSFVNzAVBITY';
 
 // Основные DOM элементы
 const loadingScreen = document.getElementById('loadingScreen');
@@ -29,9 +29,8 @@ const acceptContractBtn = document.getElementById('acceptContractBtn');
 const declineContractBtn = document.getElementById('declineContractBtn');
 const closeLevelUpBtn = document.getElementById('closeLevelUpBtn');
 
-// Глобальные переменные
-let supabase = null;
-// Telegram WebApp - БЕЗОПАСНАЯ проверка
+// Глобальные переменные (УБЕРИ let отсюда если есть повторение)
+let supabase = null; // ТОЛЬКО ОДИН РАЗ ЗДЕСЬ!
 let telegramApp = null;
 let telegramUser = null;
 
@@ -39,9 +38,13 @@ let telegramUser = null;
 if (typeof window.Telegram !== 'undefined' && window.Telegram.WebApp) {
     telegramApp = window.Telegram.WebApp;
     console.log('✅ Telegram WebApp обнаружен');
+    telegramApp.expand(); // Разворачиваем на весь экран
+    telegramUser = telegramApp.initDataUnsafe?.user;
 } else {
     console.log('🌐 Запущено в браузере (не в Telegram)');
 }
+
+// Данные игрока по умолчанию
 let player = {
     codeName: '',
     level: 1,
@@ -61,90 +64,109 @@ let player = {
 /**
  * Инициализирует Supabase
  */
-function initSupabase() {
+async function initSupabase() {
     try {
-        supabase = supabase.createClient(SUPABASE_URL, SUPABASE_KEY);
-        console.log('✅ Supabase инициализирован!');
+        // ПРОВЕРКА: есть ли supabase в window
+        if (!window.supabase) {
+            console.error('❌ Supabase не загрузился в window');
+            return false;
+        }
+
+        console.log('🔄 Инициализация Supabase...');
+        console.log('URL:', SUPABASE_URL);
+
+        supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+            auth: { persistSession: false },
+            db: { schema: 'public' }
+        });
+
+        // Проверяем подключение
+        const { data, error } = await supabase
+            .from('players')
+            .select('count', { count: 'exact', head: true });
+
+        if (error) {
+            console.error('❌ Ошибка подключения к Supabase:', error);
+            return false;
+        }
+
+        console.log('✅ Supabase подключен успешно!');
         return true;
     } catch (error) {
-        console.error('❌ Ошибка инициализации Supabase:', error);
+        console.error('❌ Критическая ошибка Supabase:', error);
         return false;
     }
 }
 
 // ===========================================
-// 3. ТЕЛЕГРАМ ИНТЕГРАЦИЯ
+// 3. ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ
 // ===========================================
 
 /**
- * Инициализирует Telegram WebApp
+ * Получает ID пользователя
  */
-function initTelegram() {
-    if (telegramApp) {
-        telegramApp.expand();
-        telegramUser = telegramApp.initDataUnsafe?.user;
-
-        if (telegramUser) {
-            console.log('👤 Пользователь Telegram:', telegramUser);
-
-            // Показываем имя Telegram в интерфейсе
-            const nameElement = document.getElementById('playerCodeName');
-            if (nameElement) {
-                if (telegramUser.username) {
-                    nameElement.textContent = `@${telegramUser.username}`;
-                } else if (telegramUser.first_name) {
-                    nameElement.textContent = telegramUser.first_name;
-                }
-            }
-        }
-    } else {
-        console.log('🌐 Запущено в браузере, не в Telegram');
+function getUserId() {
+    if (telegramUser && telegramUser.id) {
+        return telegramUser.id.toString();
     }
-}
 
-// ===========================================
-// 4. ФУНКЦИИ ДЛЯ РАБОТЫ С БАЗОЙ ДАННЫХ
-// ===========================================
+    // Для локального использования создаем ID
+    let localUserId = localStorage.getItem('irlLevel_userId');
+    if (!localUserId) {
+        localUserId = 'local_' + Date.now() + '_' + Math.random().toString(36).substr(2, 9);
+        localStorage.setItem('irlLevel_userId', localUserId);
+    }
+    return localUserId;
+}
 
 /**
  * Сохраняет данные игрока в Supabase
  */
 async function saveToSupabase() {
-    if (!supabase || !telegramUser) {
-        console.log('⚠️ Supabase не готов или нет пользователя');
+    if (!supabase) {
+        console.log('⚠️ Supabase не готов');
         return false;
     }
 
-    const userId = telegramUser.id.toString();
+    const userId = getUserId();
+    if (!userId) {
+        console.log('⚠️ Нет ID пользователя');
+        return false;
+    }
+
+    console.log('💾 Сохранение в Supabase для ID:', userId);
 
     try {
-        const { error } = await supabase
+        const { data, error } = await supabase
             .from('players')
             .upsert({
                 telegram_id: userId,
-                telegram_username: telegramUser.username || '',
-                telegram_first_name: telegramUser.first_name || '',
-                telegram_last_name: telegramUser.last_name || '',
-                code_name: player.codeName,
-                level: player.level,
-                xp: player.xp,
-                resolve: player.resolve,
-                diamonds: player.diamonds,
-                stats: player.stats,
-                achievements: player.achievements,
-                last_quest_date: player.lastQuestDate,
+                telegram_username: telegramUser?.username || '',
+                telegram_first_name: telegramUser?.first_name || '',
+                telegram_last_name: telegramUser?.last_name || '',
+                code_name: player.codeName || generateCodeName(),
+                level: player.level || 1,
+                xp: player.xp || 0,
+                resolve: player.resolve || 0,
+                diamonds: player.diamonds || 0,
+                stats: player.stats || { strength: 1, focus: 1, will: 1 },
+                achievements: player.achievements || [],
+                accepted_contract: player.acceptedContract || false,
+                last_quest_date: player.lastQuestDate || null,
                 last_active: new Date().toISOString()
+            }, {
+                onConflict: 'telegram_id'
             });
 
         if (error) {
-            console.error('❌ Ошибка сохранения в Supabase:', error);
+            console.error('❌ Ошибка Supabase:', error);
             return false;
         }
 
-        console.log('✅ Данные сохранены в Supabase для:', userId);
+        console.log('✅ Данные сохранены в Supabase');
         return true;
     } catch (error) {
-        console.error('❌ Ошибка при сохранении:', error);
+        console.error('❌ Исключение при сохранении:', error);
         return false;
     }
 }
@@ -153,12 +175,16 @@ async function saveToSupabase() {
  * Загружает данные игрока из Supabase
  */
 async function loadFromSupabase() {
-    if (!supabase || !telegramUser) {
-        console.log('⚠️ Supabase не готов или нет пользователя');
+    if (!supabase) {
+        console.log('⚠️ Supabase не инициализирован');
         return false;
     }
 
-    const userId = telegramUser.id.toString();
+    const userId = getUserId();
+    if (!userId) {
+        console.log('⚠️ Не удалось определить ID пользователя');
+        return false;
+    }
 
     try {
         const { data, error } = await supabase
@@ -187,7 +213,7 @@ async function loadFromSupabase() {
                 diamonds: data.diamonds || 0,
                 stats: data.stats || { strength: 1, focus: 1, will: 1 },
                 achievements: data.achievements || [],
-                acceptedContract: true,
+                acceptedContract: data.accepted_contract || false,
                 lastQuestDate: data.last_quest_date || null
             };
 
@@ -203,10 +229,10 @@ async function loadFromSupabase() {
 }
 
 /**
- * Сохраняет данные локально (как backup)
+ * Сохраняет данные локально
  */
 function saveToLocalStorage() {
-    const key = telegramUser ? `irlLevel_${telegramUser.id}` : 'irlLevel_local';
+    const key = `irlLevel_${getUserId()}`;
     localStorage.setItem(key, JSON.stringify(player));
 }
 
@@ -214,11 +240,15 @@ function saveToLocalStorage() {
  * Загружает данные локально
  */
 function loadFromLocalStorage() {
-    const key = telegramUser ? `irlLevel_${telegramUser.id}` : 'irlLevel_local';
+    const key = `irlLevel_${getUserId()}`;
     const data = localStorage.getItem(key);
     if (data) {
-        player = JSON.parse(data);
-        return true;
+        try {
+            player = JSON.parse(data);
+            return true;
+        } catch (e) {
+            console.error('❌ Ошибка парсинга локальных данных:', e);
+        }
     }
     return false;
 }
@@ -229,40 +259,50 @@ function loadFromLocalStorage() {
 async function savePlayerData() {
     // Всегда сохраняем локально
     saveToLocalStorage();
+    console.log('💾 Данные сохранены локально');
 
-    // Пытаемся сохранить в Supabase
-    if (supabase && telegramUser) {
-        const saved = await saveToSupabase();
-        if (saved) {
-            console.log('✅ Данные синхронизированы с облаком!');
-            return true;
-        } else {
-            console.log('⚠️ Не удалось синхронизировать с облаком');
-            return false;
-        }
+    // Пробуем сохранить в Supabase (если доступен)
+    if (supabase) {
+        setTimeout(async () => {
+            await trySaveToSupabase();
+        }, 500); // Сохраняем с небольшой задержкой
     }
 
-    return false;
+    return true;
 }
 
 /**
  * Основная функция загрузки данных
  */
 async function loadPlayerData() {
-    // Сначала пробуем загрузить из Supabase
-    if (supabase && telegramUser) {
-        const loaded = await loadFromSupabase();
-        if (loaded) {
-            return true;
-        }
-    }
+    console.log('🔄 Загрузка данных...');
 
-    // Если не удалось, грузим локально
-    return loadFromLocalStorage();
+    // Пробуем грузить локально (это точно сработает)
+    const loaded = loadFromLocalStorage();
+
+    if (loaded) {
+        console.log('📥 Данные загружены локально:', player);
+        return true;
+    } else {
+        console.log('📝 Данные не найдены, создаем нового игрока');
+        // Создаем дефолтного игрока для теста
+        player = {
+            codeName: generateCodeName(),
+            level: 1,
+            xp: 0,
+            resolve: 10,
+            diamonds: 5,
+            stats: { strength: 1, focus: 1, will: 1 },
+            acceptedContract: false,  // Оставляем false чтобы показать контракт
+            lastQuestDate: null,
+            achievements: []
+        };
+        return false;
+    }
 }
 
 // ===========================================
-// 5. ОСНОВНЫЕ ФУНКЦИИ ПРИЛОЖЕНИЯ
+// 4. ОСНОВНЫЕ ФУНКЦИИ ПРИЛОЖЕНИЯ
 // ===========================================
 
 /**
@@ -281,6 +321,13 @@ function generateCodeName() {
 function showLoadingScreen(callback) {
     const loadingProgress = document.getElementById('loadingProgress');
     const loadingText = document.getElementById('loadingText');
+
+    if (!loadingProgress || !loadingText) {
+        console.error('❌ Не найден элемент загрузки');
+        if (callback) setTimeout(callback, 100);
+        return;
+    }
+
     let progress = 0;
 
     const loadingMessages = [
@@ -318,18 +365,36 @@ function showLoadingScreen(callback) {
 }
 
 /**
+ * Обновляет информацию игрока в интерфейсе
+ */
+function updatePlayerInfo() {
+    if (playerCodeName) {
+        playerCodeName.textContent = player.codeName || 'Новичок';
+    }
+    if (playerLevel) {
+        playerLevel.textContent = player.level;
+    }
+}
+
+/**
  * Инициализирует приложение
  */
 async function initApp() {
     console.log('🚀 Инициализация приложения...');
 
-    // Загружаем данные
-    const hasSavedData = await loadPlayerData();
+    // ВРЕМЕННО: пропускаем Supabase для теста
+    console.log('⚠️ Временный режим без Supabase');
 
-    if (hasSavedData && player.acceptedContract) {
-        startGame();
-    } else {
+    // Создаем или загружаем игрока
+    const loaded = loadFromLocalStorage();
+
+    if (!loaded || !player.acceptedContract) {
+        // Показываем контракт
         showContract();
+    } else {
+        // Показываем игру
+        updatePlayerInfo();
+        startGame();
     }
 }
 
@@ -337,15 +402,28 @@ async function initApp() {
  * Показывает контракт
  */
 function showContract() {
-    appContainer.classList.add('hidden');
-    contractModal.classList.remove('hidden');
+    if (appContainer) appContainer.classList.add('hidden');
+    if (contractModal) {
+        contractModal.classList.remove('hidden');
 
-    const exampleName = generateCodeName();
-    document.querySelector('.contract-info').innerHTML += `
-        <p style="text-align: center; margin-top: 20px; color: #00ff88;">
-            <i class="fas fa-user-secret"></i> Ваш код: <strong>${exampleName}</strong>
-        </p>
-    `;
+        // Генерируем пример кодового имени
+        const exampleName = generateCodeName();
+        const contractInfo = document.querySelector('.contract-info');
+        if (contractInfo) {
+            const existingExample = contractInfo.querySelector('.example-code');
+            if (existingExample) {
+                existingExample.remove();
+            }
+
+            const exampleElement = document.createElement('p');
+            exampleElement.className = 'example-code';
+            exampleElement.style.textAlign = 'center';
+            exampleElement.style.marginTop = '20px';
+            exampleElement.style.color = '#00ff88';
+            exampleElement.innerHTML = `<i class="fas fa-user-secret"></i> Пример кода: <strong>${exampleName}</strong>`;
+            contractInfo.appendChild(exampleElement);
+        }
+    }
 }
 
 /**
@@ -367,9 +445,18 @@ async function acceptContract() {
     };
 
     await savePlayerData();
-    contractModal.classList.add('hidden');
+    updatePlayerInfo();
+
+    if (contractModal) contractModal.classList.add('hidden');
     showNotification(`Добро пожаловать, ${player.codeName}!`, 'success');
     startGame();
+
+    // Пробуем синхронизировать с Supabase
+    setTimeout(async () => {
+        if (supabase) {
+            await trySaveToSupabase();
+        }
+    }, 1000);
 }
 
 /**
@@ -379,13 +466,22 @@ function declineContract() {
     console.log('❌ Контракт отклонен');
     showNotification('Контракт отклонен. Возвращайтесь, когда будете готовы!', 'warning');
 
-    // ВМЕСТО этого просто покажи сообщение:
     setTimeout(() => {
         document.body.innerHTML = `
-            <div style="text-align: center; padding: 50px; color: white;">
-                <h2>Контракт отклонен</h2>
-                <p>Обновите страницу чтобы начать заново</p>
-                <button onclick="location.reload()" style="margin-top:20px; padding:10px 20px;">
+            <div style="text-align: center; padding: 50px; color: white; font-family: 'Roboto Mono', monospace;">
+                <h2 style="color: #ff3860;">Контракт отклонен</h2>
+                <p style="margin: 20px 0;">Система прокачки не активирована</p>
+                <button onclick="location.reload()" style="
+                    background: linear-gradient(135deg, #00ff88, #00ccff);
+                    color: #000;
+                    border: none;
+                    padding: 12px 24px;
+                    border-radius: 8px;
+                    font-family: 'Orbitron', sans-serif;
+                    font-weight: bold;
+                    cursor: pointer;
+                    margin-top: 20px;
+                ">
                     НАЧАТЬ ЗАНОВО
                 </button>
             </div>
@@ -398,17 +494,23 @@ function declineContract() {
  */
 function startGame() {
     console.log('🎮 Начало игры!');
+
+    if (appContainer) {
+        appContainer.classList.remove('hidden');
+    }
+
     updatePlayerInfo();
-    appContainer.classList.remove('hidden');
     showTab('cabinet');
     setActiveNavButton('tabCabinet');
 }
 
 // ===========================================
-// 6. ФУНКЦИИ ДЛЯ ВКЛАДОК (оставляем как были)
+// 5. ФУНКЦИИ ДЛЯ ВКЛАДОК
 // ===========================================
 
 function getCabinetContent() {
+    const xpPercent = Math.min(player.xp, 100);
+
     return `
         <div class="card">
             <h2><i class="fas fa-home"></i> ЛИЧНЫЙ КАБИНЕТ</h2>
@@ -447,9 +549,9 @@ function getCabinetContent() {
             <div class="progress-container">
                 <div class="progress-label">Прогресс до уровня ${player.level + 1}</div>
                 <div class="progress-bar">
-                    <div class="progress-fill" style="width: ${player.xp}%"></div>
+                    <div class="progress-fill" style="width: ${xpPercent}%"></div>
                 </div>
-                <div class="progress-text">${player.xp}%</div>
+                <div class="progress-text">${xpPercent}%</div>
             </div>
             
             <div class="characteristics">
@@ -745,7 +847,7 @@ function getSettingsContent() {
 }
 
 // ===========================================
-// 7. ФУНКЦИИ ДЛЯ ВКЛАДОК И ИГРОВОЙ ЛОГИКИ
+// 6. ФУНКЦИИ ДЛЯ ВКЛАДОК И ИГРОВОЙ ЛОГИКИ
 // ===========================================
 
 function setActiveNavButton(buttonId) {
@@ -764,13 +866,9 @@ function showTab(tabName) {
         case 'settings': content = getSettingsContent(); break;
         default: content = `<div class="card"><h2>Ошибка</h2><p>Вкладка не найдена</p></div>`;
     }
-    mainContent.innerHTML = content;
-}
-
-function updatePlayerInfo() {
-    if (playerCodeName) playerCodeName.textContent = player.codeName;
-    if (playerLevel) playerLevel.textContent = player.level;
-    savePlayerData();
+    if (mainContent) {
+        mainContent.innerHTML = content;
+    }
 }
 
 async function completeQuest(type) {
@@ -843,9 +941,15 @@ function buyItem(itemId, price) {
 }
 
 function showLevelUpModal() {
-    document.getElementById('oldLevel').textContent = player.level - 1;
-    document.getElementById('newLevel').textContent = player.level;
-    levelUpModal.classList.remove('hidden');
+    const oldLevelEl = document.getElementById('oldLevel');
+    const newLevelEl = document.getElementById('newLevel');
+
+    if (oldLevelEl) oldLevelEl.textContent = player.level - 1;
+    if (newLevelEl) newLevelEl.textContent = player.level;
+
+    if (levelUpModal) {
+        levelUpModal.classList.remove('hidden');
+    }
 }
 
 function showNotification(message, type = 'info') {
@@ -881,7 +985,9 @@ function getNotificationIcon(type) {
 
 function resetGame() {
     if (confirm('Вы уверены? Все данные будут удалены!')) {
-        localStorage.removeItem(telegramUser ? `irlLevel_${telegramUser.id}` : 'irlLevel_local');
+        const userId = getUserId();
+        localStorage.removeItem(`irlLevel_${userId}`);
+        localStorage.removeItem('irlLevel_userId');
         location.reload();
     }
 }
@@ -923,7 +1029,7 @@ function importData() {
 }
 
 // ===========================================
-// 8. ОБРАБОТЧИКИ СОБЫТИЙ
+// 7. ОБРАБОТЧИКИ СОБЫТИЙ
 // ===========================================
 
 function setupEventListeners() {
@@ -939,30 +1045,97 @@ function setupEventListeners() {
     if (declineContractBtn) declineContractBtn.addEventListener('click', declineContract);
     if (closeLevelUpBtn) {
         closeLevelUpBtn.addEventListener('click', function () {
-            levelUpModal.classList.add('hidden');
+            if (levelUpModal) {
+                levelUpModal.classList.add('hidden');
+            }
         });
     }
 }
 
 // ===========================================
-// 9. ЗАПУСК ПРИЛОЖЕНИЯ
+// 8. ЗАПУСК ПРИЛОЖЕНИЯ (ИСПРАВЛЕННЫЙ)
 // ===========================================
 
 window.addEventListener('DOMContentLoaded', function () {
     console.log('🚀 Приложение запускается...');
 
-    // 1. Инициализируем Supabase
-    initSupabase();
-
-    // 2. Инициализируем Telegram
-    initTelegram();
-
-    // 3. Настраиваем обработчики
+    // Настраиваем обработчики
     setupEventListeners();
 
-    // 4. Показываем загрузку
+    // Показываем загрузку
     showLoadingScreen(async function () {
-        // 5. Инициализируем приложение
+        // Инициализируем приложение (локально)
         await initApp();
+
+        // Пытаемся подключить Supabase в фоне
+        setTimeout(async () => {
+            console.log('🔄 Фоновая инициализация Supabase...');
+            try {
+                if (window.supabase) {
+                    supabase = window.supabase.createClient(SUPABASE_URL, SUPABASE_KEY, {
+                        auth: { persistSession: false }
+                    });
+                    console.log('✅ Supabase клиент создан (фон)');
+
+                    // Пробуем проверить подключение
+                    setTimeout(async () => {
+                        try {
+                            const { data, error } = await supabase
+                                .from('players')
+                                .select('count', { count: 'exact', head: true })
+                                .limit(1);
+
+                            if (error) {
+                                console.log('⚠️ Supabase: таблица недоступна', error.message);
+                            } else {
+                                console.log('✅ Supabase подключен! Записей:', data?.count || 0);
+
+                                // Если игрок уже есть, сохраняем в Supabase
+                                if (player.acceptedContract) {
+                                    setTimeout(async () => {
+                                        await saveToSupabase();
+                                    }, 1000);
+                                }
+                            }
+                        } catch (e) {
+                            console.log('⚠️ Supabase: ошибка проверки', e.message);
+                        }
+                    }, 500);
+                } else {
+                    console.log('❌ Supabase не загрузился в window');
+                }
+            } catch (error) {
+                console.log('⚠️ Ошибка инициализации Supabase:', error.message);
+            }
+        }, 1500); // Ждем 1.5 секунды после старта
     });
 });
+
+// Делаем функции глобальными для обработчиков onclick в HTML
+window.completeQuest = completeQuest;
+window.buyItem = buyItem;
+window.exportData = exportData;
+window.importData = importData;
+window.resetGame = resetGame;
+
+// Функция для проверки Supabase
+window.checkSupabase = async () => {
+    console.log('=== ПРОВЕРКА SUPABASE ===');
+    console.log('Supabase объект:', supabase);
+    console.log('Ключ:', SUPABASE_KEY ? 'Есть' : 'Нет');
+    console.log('Telegram User:', telegramUser);
+    console.log('Player:', player);
+
+    if (supabase) {
+        try {
+            const { data, error } = await supabase
+                .from('players')
+                .select('telegram_id', { count: 'exact', head: true });
+
+            console.log('Проверка подключения:', error ? `❌ ${error.message}` : '✅ OK');
+            console.log('Количество записей в таблице:', data?.count || 0);
+        } catch (e) {
+            console.error('Ошибка проверки:', e);
+        }
+    }
+};
