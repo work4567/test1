@@ -1179,3 +1179,47 @@ input:checked+.slider:before {
         min-width: 90%;
     }
 }
+
+/* Добавь в конец style.css */
+
+/* Стили для выполненных заданий */
+.quest-item.completed {
+    border-color: rgba(0, 255, 136, 0.3);
+    background: rgba(0, 255, 136, 0.05);
+    transition: all 0.5s ease;
+}
+
+.quest-button.completed {
+    background: #444 !important;
+    color: #888 !important;
+    cursor: not-allowed;
+}
+
+/* Заголовок заданий с таймером */
+.quests-header {
+    display: flex;
+    justify-content: space-between;
+    align-items: center;
+    margin-bottom: 20px;
+    padding: 10px;
+    background: rgba(0, 0, 0, 0.2);
+    border-radius: 10px;
+}
+
+.quest-timer {
+    color: #00ccff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+}
+
+/* Таймер до сброса в кабинете */
+.daily-reset-timer {
+    text-align: center;
+    margin-top: 20px;
+    padding: 10px;
+    background: rgba(0, 204, 255, 0.1);
+    border-radius: 10px;
+    color: #00ccff;
+    font-family: 'Orbitron', sans-serif;
+    font-size: 14px;
+}
